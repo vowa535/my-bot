@@ -29,19 +29,19 @@ QUESTIONS = [
 
 def get_result_text(score: int) -> str:
     if score <= 8:
-        return " 0-8 баллов — Всё под контролем\nПризнаков зависимости нет. Алкоголь присутствует в жизни умеренно и не влияет на качество жизни. Просто продолжай наблюдать за собой."
+        return "🟢 0-8 баллов — Всё под контролем\nПризнаков зависимости нет. Алкоголь присутствует в жизни умеренно и не влияет на качество жизни. Просто продолжай наблюдать за собой."
     elif score <= 18:
         return "🟡 9-18 баллов — Есть риски\nНекоторые паттерны поведения говорят о том что стоит обратить внимание. Зависимости пока нет — но она формируется незаметно. Хорошее время чтобы задуматься и пересмотреть привычки."
     else:
-        return " 19-36 баллов — Высокий риск\nКартина говорит о сформировавшейся зависимости. Это не приговор — но это сигнал что пора действовать. Первый шаг — честно признать это себе. Именно с этого начинают все кто смог изменить свою жизнь."
+        return "🔴 19-36 баллов — Высокий риск\nКартина говорит о сформировавшейся зависимости. Это не приговор — но это сигнал что пора действовать. Первый шаг — честно признать это себе. Именно с этого начинают все кто смог изменить свою жизнь."
 
 dp = Dispatcher(storage=MemoryStorage())
 
+# 1. Приветственный экран
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardBuilder()
     kb.button(text="🚀 Пройти тест", callback_data="start_quiz")
-    
     await message.answer(
         "👋 **Привет! Это тест на выявление рисков употребления алкоголя.**\n\n"
         "Тест основан на реальном инструменте — называется AUDIT (Alcohol Use Disorders Identification Test). "
@@ -52,12 +52,14 @@ async def cmd_start(message: types.Message):
         parse_mode="Markdown"
     )
 
+# 2. Нажатие на кнопку "Начать"
 @dp.callback_query(F.data == "start_quiz")
 async def begin_quiz(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(current_q=0, score=0)
     await callback.message.delete()
     await send_question(callback.message, state)
 
+# 3. Отправка вопроса
 async def send_question(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if data["current_q"] >= len(QUESTIONS):
@@ -70,9 +72,10 @@ async def send_question(message: types.Message, state: FSMContext):
         kb.button(text=text, callback_data=str(score))
     kb.adjust(1)
 
-    await message.answer(f" {q_data['q']}", reply_markup=kb.as_markup())
+    await message.answer(f"❓ {q_data['q']}", reply_markup=kb.as_markup())
     await state.set_state(QuizState.answering)
 
+# 4. Обработка ответа
 @dp.callback_query(QuizState.answering, F.data.isdigit())
 async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
     score = int(callback.data)
@@ -83,6 +86,7 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     await send_question(callback.message, state)
 
+# 5. Результат
 async def finish_quiz(message: types.Message, state: FSMContext):
     data = await state.get_data()
     result = get_result_text(data["score"])
