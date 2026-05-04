@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-# 🔑 ТВОЙ ТОКЕН
+# 🔑 ВСТАВЬ СЮДА СВОЙ ТОКЕН
 BOT_TOKEN = "8281205863:AAFKmE4xaNkbYyTZDB5780qkQFDNfNA0cYM"
 
 class QuizState(StatesGroup):
@@ -42,6 +42,7 @@ dp = Dispatcher(storage=MemoryStorage())
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardBuilder()
     kb.button(text="🚀 Пройти тест", callback_data="start_quiz")
+    
     await message.answer(
         "👋 **Привет! Это тест на выявление рисков употребления алкоголя.**\n\n"
         "Тест основан на реальном инструменте — называется AUDIT (Alcohol Use Disorders Identification Test). "
